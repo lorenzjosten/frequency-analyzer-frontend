@@ -20,12 +20,12 @@ val packedUi by configurations.creating {
 
 val run by tasks.registering(YarnTask::class) {
     dependsOn(tasks.npmInstall)
-    yarnCommand.set(listOf("serve:prod"))
+    yarnCommand.set(listOf("dev"))
 }
 
 val build by tasks.registering(YarnTask::class) {
     dependsOn(tasks.npmInstall)
-    yarnCommand.set(listOf("build:prod"))
+    yarnCommand.set(listOf("build"))
     inputs.dir("src")
     outputs.dir("dist")
 }
