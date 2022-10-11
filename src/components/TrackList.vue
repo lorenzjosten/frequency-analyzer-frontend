@@ -13,9 +13,9 @@ const props = defineProps({
 
 const emit = defineEmits(['select', 'delete']);
 
-const select = ref<Track>();
+const selected = ref<Track>();
 
-watch(select, (track) => {
+watch(selected, (track) => {
   emit('select', track);
 });
 
@@ -41,18 +41,18 @@ async function drop(track: Track) {
             class="list-group-item"
             v-for="track in tracks"
             :key="track.id"
-            :class="{ active: track === select }"
+            :class="{ active: track === selected }"
           >
             <input
               type="radio"
               name="trackSelection"
               class="btn-check"
               :value="track"
-              v-model="select"
-              :id="track.id.toString"
+              v-model="selected"
+              :id="track.id.toString()"
             />
             <div class="d-grid gap-2">
-              <label class="btn-block" :for="track.id.toString">{{
+              <label class="btn-block" :for="track.id.toString()">{{
                 track.name
               }}</label>
               <button

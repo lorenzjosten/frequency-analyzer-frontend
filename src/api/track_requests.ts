@@ -3,15 +3,16 @@ import { Request } from '@/api/request';
 export class Find implements Request {
   constructor(
     id: number,
-    public url = '/file/' + id,
+    public url = '/track/' + id,
     public method = 'get',
     public headers = { Accept: 'application/json' }
   ) {}
 }
 
-export class FindAll implements Request {
+export class Data implements Request {
   constructor(
-    public url = '/file',
+    id: number,
+    public url = '/track/' + id + '/medium',
     public method = 'get',
     public headers = { Accept: 'application/json' }
   ) {}
@@ -20,7 +21,7 @@ export class FindAll implements Request {
 export class Delete implements Request {
   constructor(
     id: number,
-    public url = '/file/' + id,
+    public url = '/track/' + id,
     public method = 'delete',
     public headers = { Accept: 'application/json' }
   ) {}
@@ -29,7 +30,7 @@ export class Delete implements Request {
 export class Create implements Request {
   constructor(
     public data: FormData,
-    public url = '/file',
+    public url = '/upload',
     public method = 'post',
     public headers = {
       Accept: 'application/json',

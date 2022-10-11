@@ -7,9 +7,12 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 export async function sendRequest<
   Req extends Request,
   Res extends Response<any>
->(request: Req, onSuccess: (response: Res) => any) {
+>(request: Req, onSuccess: (response: Res) => any = () => {}) {
   return axios
     .request(request)
-    .then((response) => onSuccess(response as Res))
+    .then((response) => {
+      console.log(response);
+      onSuccess(response as Res);
+    })
     .catch(console.error);
 }
