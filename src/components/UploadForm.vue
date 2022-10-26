@@ -1,33 +1,33 @@
 <script setup lang="ts">
-const emit = defineEmits(['upload']);
+import { sendRequest } from '@/api/client';
+import * as Request from '@/api/track_requests'
 
 async function upload(event: Event) {
   let fileForm = new FormData(event.target as HTMLFormElement);
 
   if (valid(fileForm)) {
-    emit('upload', fileForm);
+    sendRequest(new Request.Create(fileForm));
   }
 }
 
 function valid(fileForm: FormData): boolean {
   const hasFile = (form: FormData) => form.get('file') instanceof File;
   const getFile = (form: FormData) => form.get('file') as File;
-  const validFile = (file: File) => file.name.length > 0 && file.size > 0;
+  const hasData = (file: File) => file.name.length > 0 && file.size > 0;
 
-  return hasFile(fileForm) && validFile(getFile(fileForm));
+  return hasFile(fileForm) && hasData(getFile(fileForm));
 }
 </script>
+
 <template>
-  <div class="mb-3">
-    <form @submit.prevent="upload" enctype="multipart/form-data">
-      <input
-        class="form-control"
-        type="file"
-        accept="audio/mpeg"
-        name="file"
-        capture
-      />
-      <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
-  </div>
+  <form @submit.prevent="upload" enctype="multipart/form-data">
+    <div class="form-group row">
+      <div class="col-md-9">
+        <input class="form-control" type="file" accept="audio/mpeg" name="file" capture />
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-success form-control" type="submit">Upload</button>
+      </div>
+    </div>
+  </form>
 </template>

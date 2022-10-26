@@ -10,9 +10,6 @@ export async function sendRequest<
 >(request: Req, onSuccess: (response: Res) => any = () => {}) {
   return axios
     .request(request)
-    .then((response) => {
-      console.log(response);
-      onSuccess(response as Res);
-    })
+    .then((response) => onSuccess(response as Res))
     .catch(console.error);
 }

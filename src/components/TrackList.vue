@@ -1,26 +1,29 @@
 <script setup lang="ts">
-import { watch, ref } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { sendRequest } from '@/api/client';
+import * as Request from '@/api/track_requests';
+import * as Events from '@/api/events';
 import Track from '@/model/track';
 import Spinner from '@/components/Spinner.vue';
 
-const props = defineProps({
-  tracks: {
-    type: Array<Track>,
-    required: true,
-    default: []
-  }
-});
-
-const emit = defineEmits(['select', 'delete']);
-
+const tracks = reactive(new Array<Track>());
 const selected = ref<Track>();
+const selectedClass = ref("active bg-success border-0")
 
-watch(selected, (track) => {
-  emit('select', track);
-});
+onMounted(() => {
+  Events.tracks((track: Track) => {if (!tracks.includes(track)) tracks.push(track)})
+})
 
-async function drop(track: Track) {
-  emit('delete', track);
+onBeforeUnmount(() => tracks.splice(0, tracks.length))
+
+const emit = defineEmits(['select']);
+
+async function onSelectTrack() {
+  emit('select', selected.value);
+}
+
+async function onDeleteTrack(track: Track) {
+  sendRequest(new Request.Delete(track.id), () => tracks.splice(tracks.indexOf(track), 1));
 }
 </script>
 
@@ -32,34 +35,20 @@ async function drop(track: Track) {
       </tr>
     </thead>
     <div v-if="tracks.length == 0">
-      <Spinner />
+      <Spinner :msg="'Upload a track.'" />
     </div>
     <div v-else>
       <tbody class="list-group">
         <tr>
-          <td
-            class="list-group-item"
-            v-for="track in tracks"
-            :key="track.id"
-            :class="{ active: track === selected }"
-          >
-            <input
-              type="radio"
-              name="trackSelection"
-              class="btn-check"
-              :value="track"
-              v-model="selected"
-              :id="track.id.toString()"
-            />
+          <td class="list-group-item" v-for="track in tracks" :key="track.id"
+            :class="(track === selected) ? selectedClass : ''">
+            <input type="radio" name="trackSelection" class="btn-check" :value="track" v-model="selected"
+              @change="onSelectTrack" :id="track.id.toString()" />
             <div class="d-grid gap-2">
               <label class="btn-block" :for="track.id.toString()">{{
-                track.name
+                  track.name
               }}</label>
-              <button
-                type="button"
-                class="btn-close"
-                @click.self="drop(track)"
-              ></button>
+              <button type="button" class="btn-close" @click.self="onDeleteTrack(track)" />
             </div>
           </td>
         </tr>
@@ -73,5 +62,11 @@ async function drop(track: Track) {
   position: absolute;
   top: auto;
   right: 0;
+}
+
+.list-group {
+  max-height: 250px;
+  margin-bottom: 10px;
+  overflow: scroll;
 }
 </style>

@@ -1,44 +1,61 @@
 <script setup lang="ts">
-import { onMounted, ref, reactive } from 'vue';
-import { sendRequest } from '@/api/client';
-import * as Events from '@/api/events';
-import * as Request from '@/api/track_requests';
-import * as Response from '@/api/track_responses';
+import { onMounted, ref } from 'vue';
 import TrackList from '@/components/TrackList.vue';
 import UploadForm from '@/components/UploadForm.vue';
-import Track from '@/model/track';
-import TrackData from '@/model/track_data';
 import Player from '../components/Player.vue';
+import Track from '@/model/track';
+import PowerSpectrum from '@/components/PowerSpectrum.vue';
 
-const trackList = ref(new Array<Track>());
-const currentData = ref<TrackData>();
-const currentTrack = ref<Track>();
+const trackId = ref<number | undefined>()
+const trackName = ref<string | undefined>()
+const trackPlayTime = ref(0.0) // [ms]
 
-Events.allFiles((track: Track) => trackList.value.push(track));
+const startAnalysis = ref(false)
+const stopAnalysis = ref(false)
+const analysisStarted = ref(false)
 
-async function deleteTrack(track: Track) {
-  sendRequest(
-    new Request.Delete(track.id),
-    () => (trackList.value = trackList.value.filter((t) => t !== track))
-  );
+onMounted(() => {
+  trackId.value = undefined
+  trackName.value = undefined
+  trackPlayTime.value = 0.0
+  startAnalysis.value = false
+  stopAnalysis.value = false
+  analysisStarted.value = false
+})
+
+async function onTrackSelected(track: Track) {
+  trackId.value = track.id;
+  trackName.value = track.name;
+
+  stopAnalysis.value = true
 }
 
-async function uploadFile(fileForm: FormData) {
-  sendRequest(new Request.Create(fileForm));
+async function onCanPlay() {
+  stopAnalysis.value = false
+  startAnalysis.value = true
 }
 
-async function loadData(track: Track) {
-  sendRequest(new Request.Data(track.id), (response: Response.Data) => {
-    currentData.value = response.data;
-    currentTrack.value = track;
-  });
+async function onTrackEnded() {
+  stopAnalysis.value = true
+}
+
+async function onAnalysisStarted(hasStarted: boolean) {
+  startAnalysis.value = false
+  analysisStarted.value = hasStarted;
+}
+
+async function onUpdateTrackPlayTime(time: number) {
+  trackPlayTime.value = time;
 }
 </script>
 
 <template>
   <div class="home">
-    <Player :currentData="currentData" :currentTrack="currentTrack" />
-    <UploadForm @upload="uploadFile" />
-    <TrackList :tracks="trackList" @select="loadData" @delete="deleteTrack" />
+    <Player :track-id="trackId" :track-name="trackName" :analysis-started="analysisStarted" @can-play="onCanPlay"
+      @update-time="onUpdateTrackPlayTime" @track-ended="onTrackEnded" />
+    <PowerSpectrum :track-id="trackId" :start-analysis="startAnalysis" :stop-analysis="stopAnalysis"
+      :track-play-time="trackPlayTime" @analysis-started="onAnalysisStarted" />
+    <UploadForm />
+    <TrackList @select="onTrackSelected" />
   </div>
 </template>
