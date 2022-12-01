@@ -6,15 +6,21 @@ import * as Events from '@/api/events';
 import Track from '@/model/track';
 import Spinner from '@/components/Spinner.vue';
 
+let source: EventSource | undefined = undefined
 const tracks = reactive(new Array<Track>());
 const selected = ref<Track>();
 const selectedClass = ref("active bg-success border-0")
 
 onMounted(() => {
-  Events.tracks((track: Track) => {if (!tracks.includes(track)) tracks.push(track)})
+  source = Events.tracks((track: Track) => {
+    if (!tracks.includes(track)) tracks.push(track)
+  })
 })
 
-onBeforeUnmount(() => tracks.splice(0, tracks.length))
+onBeforeUnmount(() => {
+  tracks.splice(0, tracks.length)
+  if (source) source.close()
+})
 
 const emit = defineEmits(['select']);
 
@@ -57,7 +63,7 @@ async function onDeleteTrack(track: Track) {
   </table>
 </template>
 
-<style>
+<style scoped>
 .btn-close {
   position: absolute;
   top: auto;
