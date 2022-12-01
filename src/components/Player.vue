@@ -99,6 +99,7 @@ async function onCanPlay() {
 
 async function stop() {
   isPlaying.value = false
+  formattedTime.value = formatter.format(0)
   audio.load()
 }
 </script>
