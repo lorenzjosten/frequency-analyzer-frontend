@@ -26,7 +26,7 @@ const audio = new Audio();
 const canPlay = ref(false)
 const isPlaying = ref(false)
 const formatter = new TimeFormatter();
-const formattedTime = ref<string>()
+const formattedTime = ref(formatter.format(0))
 const playBtnIcon = computed(() => (
   {
     'bi-pause-circle': isPlaying.value,
@@ -49,14 +49,14 @@ watch(() => props.trackId, (newTrack) => {
   if (newTrack) {
     stop()
     canPlay.value = false;
-    audio.src = API_URL + '/track/' + newTrack + '/data';
+    audio.src = `${API_URL}/track/${newTrack}/data`;
   }
 })
 
 onMounted(() => {
   audio.onplay = onPlay
   audio.onpause = onPause
-  audio.onended = onTrackEnded
+  audio.onended = onEnded
   audio.oncanplay = onCanPlay
 })
 
@@ -87,7 +87,7 @@ async function onPause() {
   isPlaying.value = false;
 }
 
-async function onTrackEnded() {
+async function onEnded() {
   stop()
   emit('track-ended')
 }
