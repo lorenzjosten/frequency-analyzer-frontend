@@ -7,11 +7,12 @@ import { computed } from '@vue/reactivity';
 
 const chart = ref<HTMLDivElement>();
 const analysisStarted = ref(false);
-const timedPowerSpectrumSeries = reactive({ values: new Array<TimedPowerSpectrum>() })
+const timedPowerSpectrumSeries = reactive(new Array<TimedPowerSpectrum>())
 
 const currentSpectrum = computed(() => {
-    timedPowerSpectrumSeries.values = timedPowerSpectrumSeries.values.filter(spectrum => spectrum.time >= props.trackPlayTime)
-    return timedPowerSpectrumSeries.values[0]
+    const outdated = timedPowerSpectrumSeries.findIndex(spectrum => spectrum.time >= props.trackPlayTime)
+    timedPowerSpectrumSeries.splice(0, outdated)
+    return timedPowerSpectrumSeries.shift()
 })
 
 const props = defineProps({
@@ -33,14 +34,7 @@ const props = defineProps({
     }
 })
 
-onMounted(() => {
-    const config: Partial<Plotly.Config> = { responsive: true }
-    const trace: Plotly.Data = { type: 'scatter', mode: 'lines' }
-    const layout: Partial<Plotly.Layout> = { title: "Power Spectrum" }
-    const data = [trace]
-
-    if (chart.value) Plotly.newPlot(chart.value, data, layout, config)
-})
+onMounted(() => intializeChart())
 
 onBeforeUnmount(() => stopAnalysis())
 
@@ -69,6 +63,18 @@ watch(() => props.trackPlayTime, () => {
 
 let source: EventSource | undefined = undefined
 
+async function intializeChart() {
+    const config: Partial<Plotly.Config> = { responsive: true }
+    const trace: Plotly.Data = { type: 'scatter', mode: 'lines' }
+    const layout: Partial<Plotly.Layout> = { 
+        title: "Power Spectrum", 
+        xaxis: { title: "frequency [Hz]", rangemode: 'nonnegative' }, 
+        yaxis: { title: "Amplitude [a.u.]", rangemode: 'nonnegative', showticklabels: false } 
+    }
+
+    if (chart.value) Plotly.newPlot(chart.value, [trace], layout, config)
+}
+
 async function startAnalysis() {
     stopAnalysis()
 
@@ -76,18 +82,20 @@ async function startAnalysis() {
         source = Events.powerSpectra(props.trackId, (newSpectrum: TimedPowerSpectrum) => {
             if (props.trackId && newSpectrum.trackId == props.trackId) {
                 analysisStarted.value = true
-                timedPowerSpectrumSeries.values.push(newSpectrum)
+                timedPowerSpectrumSeries.push(newSpectrum)
             }
         })
     }
 }
 
-function stopAnalysis() {
+async function stopAnalysis() {
     analysisStarted.value = false
 
     source?.close()
 
-    timedPowerSpectrumSeries.values = new Array<TimedPowerSpectrum>()
+    timedPowerSpectrumSeries.splice(0, timedPowerSpectrumSeries.length)
+
+    intializeChart()
 }
 </script>
 
