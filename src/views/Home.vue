@@ -40,7 +40,7 @@ async function onTrackEnded() {
 }
 
 async function onAnalysisStarted(hasStarted: boolean) {
-  startAnalysis.value = false
+  if (hasStarted) startAnalysis.value = false
   analysisStarted.value = hasStarted;
 }
 
@@ -50,7 +50,7 @@ async function onUpdateTrackPlayTime(time: number) {
 </script>
 
 <template>
-  <div class="home">
+  <div class="home flex-fill">
     <Player :track-id="trackId" :track-name="trackName" :analysis-started="analysisStarted" @can-play="onCanPlay"
       @update-time="onUpdateTrackPlayTime" @track-ended="onTrackEnded" />
     <PowerSpectrum :track-id="trackId" :start-analysis="startAnalysis" :stop-analysis="stopAnalysis"
